@@ -1,9 +1,10 @@
 import { App } from "@slack/bolt";
-import { Configuration, OpenAIApi } from "openai";
-import * as functions from "firebase-functions";
+import { WebClient } from "@slack/web-api";
+import OpenAI from "openai";
 import { GPT_BOT_NAME } from "../../../lib/constants";
+import { config } from "../../../lib/config";
 
-const config = functions.config();
+const openAIClient = new OpenAI({ apiKey: config.openai.key });
 
 const postAsGptBot = async ({
   client,
@@ -11,7 +12,7 @@ const postAsGptBot = async ({
   threadTs,
   text,
 }: {
-  client: any;
+  client: WebClient;
   channel: string;
   threadTs: string;
   text: string;
@@ -28,7 +29,7 @@ const postAsGptBot = async ({
 
 export const useReplyEvent = (app: App) => {
   app.event("message", async ({ event, client, logger }) => {
-    const { thread_ts: threadTs, bot_id: botId, text } = event as any;
+    const { thread_ts: threadTs, bot_id: botId, text } = event as { thread_ts?: string; bot_id?: string; text?: string };
     // botの返信またはスレッドのメッセージでなければ何もしない
     if (botId || !threadTs) {
       return;
@@ -63,36 +64,26 @@ export const useReplyEvent = (app: App) => {
         ? messages!.slice(1, -1)
         : messages!.slice(-6, -1);
     const prevMessageText =
-      prevMessages.map((m, i) => {
-        m.bot_id ? `${i+1}. you: ${m.text}` : `${i+1}. I: ${m.text}`
-        return `${i+1}. ${m.text}`
-      }).join("\n") || ""
+      prevMessages.map((m, i) => `${i + 1}. ${m.bot_id ? "AI" : "User"}: ${m.text}`).join("\n") || "";
 
-
-      // 回答メッセージの作成 with OpenAI
-      const prompt = `
-You are an excellent AI. Please answer the current question based on your knowledge and our previous conversations.
-
-# Previous conversations:
-${prevMessageText}
-
-# Current question:
-${text}
-
-# Answer:
-`;
-      const configuration = new Configuration({
-        apiKey: config.openai.key,
-      });
-      const openAIClient = new OpenAIApi(configuration);
-      const completions = await openAIClient.createCompletion({
-        model: "text-davinci-003",
-        prompt: prompt,
+      // 回答メッセージの作成 with OpenAI Chat Completions
+      const completion = await openAIClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an excellent AI. Answer based on your knowledge and our previous conversations.",
+          },
+          ...(prevMessageText
+            ? [{ role: "user" as const, content: `Previous conversations:\n${prevMessageText}` }]
+            : []),
+          { role: "user", content: text ?? "" },
+        ],
         max_tokens: 1000,
         temperature: 0.7,
         top_p: 0.9,
       });
-      const message = completions.data.choices[0].text;
+      const message = completion.choices[0].message.content;
 
       // 仮のメッセージを削除する
       await client.chat.delete({
