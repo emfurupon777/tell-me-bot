@@ -1,12 +1,10 @@
 import { App, BlockButtonAction } from "@slack/bolt";
 import { search } from "../../../lib/search";
 import { SpreadsheetClient } from "../../../lib/spreadsheetClient";
-import * as functions from "firebase-functions";
 import { searchResultBlock } from "../blocks/searchResultBlock";
 import { errorBlock } from "../blocks/errorBlock";
 import { fetchChannelName } from "../../../lib/utils";
-
-const config = functions.config();
+import { config } from "../../../lib/config";
 
 export const useSearchAction = (app: App) => {
   app.action<BlockButtonAction>(
@@ -16,16 +14,17 @@ export const useSearchAction = (app: App) => {
       try {
         await ack();
         // スプレッドシートからデータを検索
+        const targetWord = action.value ?? "";
         const spreadsheetClient = await SpreadsheetClient.build();
         const searchItems = await spreadsheetClient.getValues(config.sheet.id);
-        const searchResult = search(searchItems, action.value);
+        const searchResult = search(searchItems, targetWord);
 
         const askChannelName = await fetchChannelName(client, channelId);
         await client.chat.postMessage({
           channel: channelId,
           blocks: searchResultBlock({
             searchResult,
-            searchWord: action.value,
+            searchWord: targetWord,
             askChannelName,
           }),
         });

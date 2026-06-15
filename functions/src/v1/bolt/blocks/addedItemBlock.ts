@@ -1,8 +1,6 @@
-import { Block, KnownBlock } from "@slack/bolt";
-import * as functions from "firebase-functions";
+import { Block, KnownBlock } from "@slack/types";
 import { randomIcon } from "../../../lib/utils";
-
-const config = functions.config();
+import { config } from "../../../lib/config";
 
 export const addedItemBlock = (
   userId: string,

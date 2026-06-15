@@ -1,36 +1,21 @@
-import { Block, KnownBlock } from "@slack/bolt";
-import * as functions from "firebase-functions";
+import { Block, KnownBlock } from "@slack/types";
 import { randomIcon } from "../../../lib/utils";
+import { config } from "../../../lib/config";
 
-const config = functions.config();
-
-const addAndAskElements = (searchWord: string, askChannelName: string) => {
-  const elements = [
-    {
-      type: "button",
-      text: {
-        type: "plain_text",
-        text: "用語を追加する",
-        emoji: true,
-      },
-      value: searchWord,
-      action_id: "show_add_item_modal",
-    },
-  ];
-  if (askChannelName) {
-    elements.push({
-      type: "button",
-      text: {
-        type: "plain_text",
-        text: `#${askChannelName}で質問する`,
-        emoji: true,
-      },
-      value: searchWord,
-      action_id: "ask",
-    });
-  }
-  return elements;
-};
+const addAndAskElements = (searchWord: string, askChannelName: string) => [
+  {
+    type: "button" as const,
+    text: { type: "plain_text" as const, text: "用語を追加する", emoji: true },
+    value: searchWord,
+    action_id: "show_add_item_modal",
+  },
+  ...(askChannelName ? [{
+    type: "button" as const,
+    text: { type: "plain_text" as const, text: `#${askChannelName}で質問する`, emoji: true },
+    value: searchWord,
+    action_id: "ask",
+  }] : []),
+];
 
 type BlockArgs = {
   searchResult: SearchResult;
@@ -99,12 +84,8 @@ export const searchResultBlock = ({
         type: "actions",
         elements: [
           ...searchItems.slice(0, 6).map((item, i) => ({
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: item.word,
-              emoji: true,
-            },
+            type: "button" as const,
+            text: { type: "plain_text" as const, text: item.word, emoji: true },
             value: item.word,
             action_id: `search_${i}`,
           })),
