@@ -1,10 +1,7 @@
-import { App } from "@slack/bolt";
+import { App, ViewSubmitAction } from "@slack/bolt";
 import { SpreadsheetClient } from "../../../lib/spreadsheetClient";
-import * as functions from "firebase-functions";
 import { addedItemBlock } from "../blocks/addedItemBlock";
-import { ViewSubmitAction } from "@slack/bolt/dist/types/view";
-
-const config = functions.config();
+import { getSheetId } from "../../../lib/config";
 
 export const useAddItemView = (app: App) => {
   app.view<ViewSubmitAction>(
@@ -18,7 +15,7 @@ export const useAddItemView = (app: App) => {
 
         // スプレッドシートに登録
         const spreadsheetClient = await SpreadsheetClient.build();
-        await spreadsheetClient.setValues(config.sheet.id, {
+        await spreadsheetClient.setValues(getSheetId(), {
           word,
           description,
         });

@@ -1,4 +1,4 @@
-import { Block, KnownBlock } from "@slack/bolt";
+import { Block, KnownBlock } from "@slack/types";
 
 export const askBlock = (targetWord: string): (Block | KnownBlock)[] => {
   return [

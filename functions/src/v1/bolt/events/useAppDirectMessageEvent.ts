@@ -8,17 +8,16 @@ import {
 } from "../../../lib/utils";
 import { searchResultBlock } from "../blocks/searchResultBlock";
 
-import * as functions from "firebase-functions";
 import { errorBlock } from "../blocks/errorBlock";
+import { getAskChannelId, getSheetId } from "../../../lib/config";
 
-const config = functions.config();
 export const useAppDirectMessageEvent = (app: App) => {
   app.event("message", async ({ event, logger, client, say }) => {
     try {
       if (event.channel_type === "im") {
         const text = (event as any).text;
         const spreadsheetClient = await SpreadsheetClient.build();
-        const searchItems = await spreadsheetClient.getValues(config.sheet.id);
+        const searchItems = await spreadsheetClient.getValues(getSheetId());
         const searchWord = isMentionMessage(text)
           ? extractMessageFromText(text)
           : text;
@@ -26,7 +25,7 @@ export const useAppDirectMessageEvent = (app: App) => {
 
         const askChannelName = await fetchChannelName(
           client,
-          config.slack.ask_channel_id
+          getAskChannelId()
         );
         await client.chat.postMessage({
           channel: event.channel,

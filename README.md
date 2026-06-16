@@ -33,7 +33,7 @@ https://github.com/krisk/fuse
 |![](https://i.gyazo.com/5f6a55b4ee64c3cc74817947d028382a.png)|![](https://i.gyazo.com/365d0ed3ff369edd70478cca27176355.png)|
 
 
-※ この機能は質問チャネルの存在が前提にあるのでオプショナルです。もし利用したい場合は、後述するFirebaseの設定にて環境変数の`slack.ask_channel_id`に質問チャネルのチャネルIDを指定してください。
+※ この機能は質問チャネルの存在が前提にあるのでオプショナルです。もし利用したい場合は、後述するFirebaseの設定にて環境変数の`SLACK_ASK_CHANNEL_ID`に質問チャネルのチャネルIDを指定してください。
 ## 設定方法
 
 ### 事前準備
@@ -41,6 +41,8 @@ https://github.com/krisk/fuse
 
 - [Firebase CLI](https://firebase.google.com/docs/cli)
     - 任意のシェルでセットアップしておいてください
+    - 本プロジェクトは Cloud Functions 第2世代（Cloud Run functions）・Node.js 24 ランタイムを利用します。最新の Firebase CLI を利用してください
+- Node.js 24
 - 空の Firebase プロジェクト
     - Blaze プラン（従量課金プラン）にプラン変更してください
 - 任意の Spreadsheet
@@ -131,23 +133,33 @@ $ cd tell-me-bot
 $ firebase use <事前準備で作成したプロジェクトのID>
 ```
 
-そして Firebase の環境変数を設定します。
-ここで今まででメモしてきた値を設定します。
+そして秘匿情報を Cloud Secret Manager に設定します。
+ここで今まででメモしてきた値を設定します。コマンド実行後に値の入力を求められるので、メモした値を貼り付けてください。
 
 ```bash
 # Slack APPの作成でメモしたBot User OAuth Tokenの値
-$ firebase functions:config:set slack.bot_token="xxxx"
+$ firebase functions:secrets:set SLACK_BOT_TOKEN
 
 # Slack APPの作成でメモしたSignin Secretの値
-$ firebase functions:config:set slack.signin_secret="xxxx"
+$ firebase functions:secrets:set SLACK_SIGNIN_SECRET
 
-# 質問チャネルがある場合は、質問チャネルのIDを指定。ない場合は空文字を指定。
-$ firebase functions:config:set slack.ask_channel_id=""
-
-# 事前準備で用意したSpreadsheetのID
-$ firebase functions:config:set sheet.id="xxxx"
+# GPTチャット機能を使う場合は OpenAI の API キーを設定（使わない場合は不要）
+$ firebase functions:secrets:set OPENAI_KEY
 ```
 
+次に、秘匿情報ではない設定値を `functions/.env` に記載します。
+
+```bash
+# functions/.env
+# 事前準備で用意したSpreadsheetのID
+SHEET_ID=xxxx
+# 質問チャネルがある場合は、質問チャネルのIDを指定。ない場合は空文字 or 行ごと省略。
+SLACK_ASK_CHANNEL_ID=
+```
+
+> ※ ローカルのエミュレータ（`npm run serve`）で動かす場合は、Secret Manager の値の代わりに `functions/.secret.local` に `SLACK_BOT_TOKEN` / `SLACK_SIGNIN_SECRET` / `OPENAI_KEY` を記載します。`.env` / `.secret.local` は `.gitignore` 済みです。
+>
+> ※ Secret の値を更新した場合は、その Secret を参照する関数を再デプロイすると反映されます。
 
 次に functions ディレクトリの依存モジュールを install します。
 

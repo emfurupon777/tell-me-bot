@@ -1,8 +1,6 @@
-import { Block, KnownBlock } from "@slack/bolt";
-import * as functions from "firebase-functions";
+import { Block, KnownBlock } from "@slack/types";
 import { randomIcon } from "../../../lib/utils";
-
-const config = functions.config();
+import { getSheetId } from "../../../lib/config";
 
 export const addedItemBlock = (
   userId: string,
@@ -36,7 +34,7 @@ export const addedItemBlock = (
       elements: [
         {
           type: "mrkdwn",
-          text: `結果を編集する場合は<https://docs.google.com/spreadsheets/d/${config.sheet.id}|こちら>`,
+          text: `結果を編集する場合は<https://docs.google.com/spreadsheets/d/${getSheetId()}|こちら>`,
         },
       ],
     },
