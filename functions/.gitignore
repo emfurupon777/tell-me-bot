@@ -9,3 +9,8 @@ typings/
 node_modules/
 
 .runtimeconfig.json
+
+# Local environment / secrets
+.env
+.env.local
+*.secret.local

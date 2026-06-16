@@ -21,7 +21,7 @@ export const useShowAddItemModalAction = (app: App) => {
               type: "plain_text",
               text: "辞書に追加",
             },
-            blocks: addItemModalBlock(action.value),
+            blocks: addItemModalBlock(action.value ?? ""),
             private_metadata: JSON.stringify({
               channelId: channelId,
             }),

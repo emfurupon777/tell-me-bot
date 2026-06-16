@@ -2,19 +2,17 @@ import { App } from "@slack/bolt";
 import { search } from "../../../lib/search";
 import { extractMessageFromText, fetchChannelName } from "../../../lib/utils";
 import { SpreadsheetClient } from "../../../lib/spreadsheetClient";
-import * as functions from "firebase-functions";
 import { searchResultBlock } from "../blocks/searchResultBlock";
 import { errorBlock } from "../blocks/errorBlock";
 import { CHAT_START_MESSAGES, GPT_BOT_NAME } from "../../../lib/constants";
-
-const config = functions.config();
+import { getAskChannelId, getOpenAiKey, getSheetId } from "../../../lib/config";
 
 export const useMentionEvent = (app: App) => {
   app.event("app_mention", async ({ event, client, logger }) => {
     const searchWord = extractMessageFromText(event.text);
 
     // OpenAIのAPIキーが設定されていてかつ指定のメッセージが含まれている場合は、GPT Botを呼ぶ
-    if(config.openai?.key && CHAT_START_MESSAGES.includes(searchWord) ) {
+    if(getOpenAiKey() && CHAT_START_MESSAGES.includes(searchWord) ) {
       await client.chat.postMessage({
         channel: event.channel,
         text: `おっけー！${GPT_BOT_NAME}を呼ぶね！`,
@@ -31,13 +29,13 @@ export const useMentionEvent = (app: App) => {
 
     try {
       const spreadsheetClient = await SpreadsheetClient.build();
-      const searchItems = await spreadsheetClient.getValues(config.sheet.id);
+      const searchItems = await spreadsheetClient.getValues(getSheetId());
 
       const searchResult = search(searchItems, searchWord);
 
       const askChannelName = await fetchChannelName(
         client,
-        config.slack.ask_channel_id
+        getAskChannelId()
       );
       await client.chat.postMessage({
         channel: event.channel,

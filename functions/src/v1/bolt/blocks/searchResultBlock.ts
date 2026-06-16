@@ -1,11 +1,12 @@
-import { Block, KnownBlock } from "@slack/bolt";
-import * as functions from "firebase-functions";
+import { Block, Button, KnownBlock } from "@slack/types";
 import { randomIcon } from "../../../lib/utils";
+import { getSheetId } from "../../../lib/config";
 
-const config = functions.config();
-
-const addAndAskElements = (searchWord: string, askChannelName: string) => {
-  const elements = [
+const addAndAskElements = (
+  searchWord: string,
+  askChannelName: string
+): Button[] => {
+  const elements: Button[] = [
     {
       type: "button",
       text: {
@@ -75,7 +76,7 @@ export const searchResultBlock = ({
         elements: [
           {
             type: "mrkdwn",
-            text: `結果を編集する場合は<https://docs.google.com/spreadsheets/d/${config.sheet.id}|こちら>`,
+            text: `結果を編集する場合は<https://docs.google.com/spreadsheets/d/${getSheetId()}|こちら>`,
           },
         ],
       },
@@ -98,7 +99,7 @@ export const searchResultBlock = ({
       {
         type: "actions",
         elements: [
-          ...searchItems.slice(0, 6).map((item, i) => ({
+          ...searchItems.slice(0, 6).map((item, i): Button => ({
             type: "button",
             text: {
               type: "plain_text",
@@ -129,7 +130,7 @@ export const searchResultBlock = ({
         elements: [
           {
             type: "mrkdwn",
-            text: `スプレッドシートを直接開く場合は<https://docs.google.com/spreadsheets/d/${config.sheet.id}|こちら>`,
+            text: `スプレッドシートを直接開く場合は<https://docs.google.com/spreadsheets/d/${getSheetId()}|こちら>`,
           },
         ],
       },
@@ -164,7 +165,7 @@ export const searchResultBlock = ({
       elements: [
         {
           type: "mrkdwn",
-          text: `スプレッドシートを直接開く場合は<https://docs.google.com/spreadsheets/d/${config.sheet.id}|こちら>`,
+          text: `スプレッドシートを直接開く場合は<https://docs.google.com/spreadsheets/d/${getSheetId()}|こちら>`,
         },
       ],
     },

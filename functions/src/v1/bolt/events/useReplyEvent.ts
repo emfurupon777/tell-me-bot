@@ -1,9 +1,7 @@
 import { App } from "@slack/bolt";
-import { Configuration, OpenAIApi } from "openai";
-import * as functions from "firebase-functions";
+import OpenAI from "openai";
 import { GPT_BOT_NAME } from "../../../lib/constants";
-
-const config = functions.config();
+import { getOpenAiKey } from "../../../lib/config";
 
 const postAsGptBot = async ({
   client,
@@ -81,18 +79,17 @@ ${text}
 
 # Answer:
 `;
-      const configuration = new Configuration({
-        apiKey: config.openai.key,
+      const openAIClient = new OpenAI({
+        apiKey: getOpenAiKey(),
       });
-      const openAIClient = new OpenAIApi(configuration);
-      const completions = await openAIClient.createCompletion({
-        model: "text-davinci-003",
-        prompt: prompt,
+      const completion = await openAIClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
         max_tokens: 1000,
         temperature: 0.7,
         top_p: 0.9,
       });
-      const message = completions.data.choices[0].text;
+      const message = completion.choices[0]?.message?.content;
 
       // 仮のメッセージを削除する
       await client.chat.delete({
